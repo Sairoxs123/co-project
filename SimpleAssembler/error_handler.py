@@ -5,6 +5,11 @@ def check_errors(instruction_set):
     errors = []
     halt_state = False
 
+    last_instruction = -1
+    for j in range(len(instruction_set)):
+        if instruction_set[j].strip():
+            last_instruction = j
+
     for i in range(len(instruction_set)):
 
         instruction = instruction_set[i].strip()
@@ -34,7 +39,7 @@ def check_errors(instruction_set):
         if instruction == "beq x0, x0, 0":  # halter
             halt_state = True
 
-            if i != len(instruction_set) - 1:
+            if i != len(instruction_set):
                 errors.append(f"Line {i+1}: Instructions after virtual halt")
 
     if halt_state == False:
