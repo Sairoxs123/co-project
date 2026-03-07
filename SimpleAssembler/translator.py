@@ -1,4 +1,4 @@
-from globals import opcode, func3, registers_in_bin
+from globals import OPCODES, FUNCT3, REGISTERS
 
 # PUSHKAR U CODE HERE
 
@@ -12,55 +12,17 @@ def twos_complement(value, bits):
     mask = (1 << bits) - 1
     return format(value & mask, f"0{bits}b")
 
-def split_instruction(line):
-    text = line.strip()
-    if not text:
-        return "", []
-
-    if " " in text:
-        opcode, rest = text.split(" ", 1)
-        operands = [part.strip() for part in rest.split(",")]
-    else:
-        opcode = text
-        operands = []
-    return opcode, operands
-
-def first_pass(lines):
-    pc = PC_START
-    labels = {}
-    clean_instructions = []
-    pcs = []
-
-    for raw in lines:
-        line = raw.strip()
-        if not line:
-            continue
-
-        if ":" in line:
-            label_part, remainder = line.split(":", 1)
-            label = label_part.strip()
-            if label:
-                labels[label] = pc
-            line = remainder.strip()
-
-            if not line:
-                break
-
-        if line:
-            clean_instructions.append(line)
-            pcs.append(pc)
-            pc += PC_STRIDE
-
-    return clean_instructions, labels, pcs
-
 def resolve_branch_or_jump_imm(token, current_pc, labels):
     if token in labels:
         return labels[token] - current_pc
     return to_int(token)
 
-def encode_b_type(instruction, current_pc, labels):
-    mnemonic, operands = split_instruction(instruction)
-    rs1, rs2, imm_token = operands
+def encode_b_type(tokens, current_pc, labels):
+    # Expected tokens format: [mnemonic, rs1, rs2, imm_or_label]
+    mnemonic = tokens[0]
+    rs1 = tokens[1]
+    rs2 = tokens[2]
+    imm_token = tokens[3]
     imm = resolve_branch_or_jump_imm(imm_token, current_pc, labels)
     imm_bits = twos_complement(imm, 13)
 
@@ -70,19 +32,23 @@ def encode_b_type(instruction, current_pc, labels):
     imm4_1 = imm_bits[8:12]
     imm11 = imm_bits[1]
 
-    return imm12 + imm10_5 + registers_in_bin[rs2] + registers_in_bin[rs1] + func3[mnemonic] + imm4_1 + imm11 + opcode[mnemonic]
+    return imm12 + imm10_5 + REGISTERS[rs2] + REGISTERS[rs1] + FUNCT3[mnemonic] + imm4_1 + imm11 + OPCODES[mnemonic]
 
-def encode_u_type(instruction):
-    mnemonic, operands = split_instruction(instruction)
-    rd, imm_token = operands
+def encode_u_type(tokens):
+    # Expected tokens format: [mnemonic, rd, imm]
+    mnemonic = tokens[0]
+    rd = tokens[1]
+    imm_token = tokens[2]
     imm = to_int(imm_token)
     imm20 = twos_complement(imm, 20)
 
-    return imm20 + registers_in_bin[rd] + opcode[mnemonic]
+    return imm20 + REGISTERS[rd] + OPCODES[mnemonic]
 
-def encode_j_type(instruction, current_pc, labels):
-    mnemonic, operands = split_instruction(instruction)
-    rd, imm_token = operands
+def encode_j_type(tokens, current_pc, labels):
+    # Expected tokens format: [mnemonic, rd, imm_or_label]
+    mnemonic = tokens[0]
+    rd = tokens[1]
+    imm_token = tokens[2]
     imm = resolve_branch_or_jump_imm(imm_token, current_pc, labels)
     imm_bits = twos_complement(imm, 21)
 
@@ -92,4 +58,4 @@ def encode_j_type(instruction, current_pc, labels):
     imm11 = imm_bits[9]
     imm19_12 = imm_bits[1:9]
 
-    return imm20 + imm10_1 + imm11 + imm19_12 + registers_in_bin[rd] + opcode[mnemonic]
+    return imm20 + imm10_1 + imm11 + imm19_12 + REGISTERS[rd] + OPCODES[mnemonic]

@@ -39,7 +39,7 @@ def check_errors(instruction_set):
         if instruction == "beq x0, x0, 0":  # halter
             halt_state = True
 
-            if i != len(instruction_set):
+            if i != last_instruction:
                 errors.append(f"Line {i+1}: Instructions after virtual halt")
 
     if halt_state == False:
