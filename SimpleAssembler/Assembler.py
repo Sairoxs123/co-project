@@ -1,51 +1,31 @@
+import sys
+from parser import parser
+from translator import first_pass
 
-# Read input from command-line arguments
+if len(sys.argv) < 3 or len(sys.argv) > 4:
+    print("Usage: python3 Assembler.py <input_assembly_path> <output_machine_code_path> [output_readable_path]")
+    sys.exit(1)
 
-#----------------------------------
+inp_file = sys.argv[1]
+out_file = sys.argv[2]
 
-inp_file = r"test_case_1.txt"  # for test
-out_file = r"output.txt"
-
+out_readable = None
+if len(sys.argv) == 4:
+    out_readable = sys.argv[3]
+    
 with open(inp_file, 'r') as f:
     lines = f.readlines()
 
-instructions = []
+clean_instructions, labels, pcs = first_pass(lines)
 
-for l in lines:
-    l = l.strip()
-
-    if l == "":
-        continue
-
-    instructions.append(l)
-
-PC = 0
 output = []
 
-##########################################
-# functions to be implemented in parser.py
-
-def parser(a, b):
-    pass
-
-
-def tokenizer(line):
-    line = line.replace(",", " ")
-    line = line.replace("(", " ")
-    line = line.replace(")", "")
-
-    tokens = line.split()
-
-    return tokens
-
-####################################
-
-for instr in instructions:
-    bin_instr = parser(instr)
+for i in range(len(clean_instructions)):
+    instr = clean_instructions[i]
+    PC = pcs[i]
+    bin_instr = parser(instr, PC, labels)
     output.append(bin_instr)
 
-    PC += 4
-
-with open(out_file, 'wb') as f:
+with open(out_file, 'w') as f:
     for instr in output:
         f.write(instr + "\n")
