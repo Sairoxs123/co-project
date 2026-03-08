@@ -1,7 +1,12 @@
 from globals import OPCODES, FUNCT3, REGISTERS, FUNCT7
 
 def to_int(value):
-    return int(value, 0)
+    if value.startswith("0x") or value.startswith("-0x"):
+        return int(value, 16)
+    elif value.startswith("0b") or value.startswith("-0b"):
+        return int(value, 2)
+    else:
+        return int(value, 10)
 
 def twos_complement(value, bits):
     mask = (1 << bits) - 1
