@@ -1,5 +1,5 @@
 import translator as t
-instruction_map = {
+instruction_map= {
     "add":t.encode_r_type,
     "sub": t.encode_r_type,
     "sll": t.encode_r_type,
@@ -24,9 +24,6 @@ instruction_map = {
     "auipc": t.encode_u_type,
     "jal":t.encode_j_type
 }
-
-
-
 def parser(line, PC, labels):
     tokens = tokenizer(line)
     mnemonic = tokens[0]
