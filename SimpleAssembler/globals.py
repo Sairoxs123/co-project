@@ -1,3 +1,16 @@
+def to_int(value):
+    return int(value,0)
+def twos_complement(value, bits):
+    if value < 0:
+        value = (1 <<bits)+ value
+    return format(value,"0"+str(bits)+"b")
+def resolve_branch_or_jump_imm(token,current_pc,labels):
+    if token in labels:
+        address =labels[token]
+        final =address -current_pc
+        return final
+    else:
+        return to_int(token)
 REGISTERS = {
     "zero": "00000", 
     "ra": "00001",
@@ -91,4 +104,5 @@ FUNCT7 = {
     "or": "0000000",
     "and": "0000000"
 }
+
 
