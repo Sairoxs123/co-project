@@ -1,10 +1,5 @@
 from globals import OPCODES, FUNCT3, REGISTERS, FUNCT7
 
-# PUSHKAR U CODE HERE
-
-PC_START = 0
-PC_STRIDE = 4
-
 def to_int(value):
     return int(value, 0)
 
@@ -16,12 +11,14 @@ def resolve_branch_or_jump_imm(token, current_pc, labels):
     if token in labels:
         return labels[token] - current_pc
     return to_int(token)
+
 def encode_r_type(tokens):
     mnemonic = tokens[0]
     rd = tokens[1]
     rs1 = tokens[2]
     rs2 =tokens[3]
-    return FUNCT7[mnemonic] +REGISTERS[rs2] + REGISTERS[rs1] + FUNCT3[mnemonic] + REGISTERS[rd] + OPCODES[mnemonic]
+    return FUNCT7[mnemonic] +REGISTERS[rs2] + REGISTERS[rs1] + FUNCT3[mnemonic] + REGISTERS[rd] + OPCODES[mnemonic]["opcode"]
+
 def encode_i_type(tokens):
     mnemonic = tokens[0]
     rd = tokens[1]
@@ -32,7 +29,8 @@ def encode_i_type(tokens):
         rs1 = tokens[2]
         imm_token = tokens[3]
     imm_token = twos_complement(to_int(imm_token), 12)
-    return imm_token + REGISTERS[rs1] + FUNCT3[mnemonic] + REGISTERS[rd] + OPCODES[mnemonic]
+    return imm_token + REGISTERS[rs1] + FUNCT3[mnemonic] + REGISTERS[rd] + OPCODES[mnemonic]["opcode"]
+
 def encode_s_type(tokens):
     # Expected tokens format: [mnemonic, rs2, imm, rs1]
     mnemonic = tokens[0]
@@ -42,7 +40,7 @@ def encode_s_type(tokens):
 
     imm_token = twos_complement(to_int(imm_token), 12)
 
-    return imm_token[0:7] + REGISTERS[rs2] + REGISTERS[rs1] + FUNCT3[mnemonic] + imm_token[7:12] + OPCODES[mnemonic]
+    return imm_token[0:7] + REGISTERS[rs2] + REGISTERS[rs1] + FUNCT3[mnemonic] + imm_token[7:12] + OPCODES[mnemonic]["opcode"]
 
 def encode_b_type(tokens, current_pc, labels):
     # Expected tokens format: [mnemonic, rs1, rs2, imm_or_label]
@@ -59,7 +57,7 @@ def encode_b_type(tokens, current_pc, labels):
     imm4_1 = imm_bits[8:12]
     imm11 = imm_bits[1]
 
-    return imm12 + imm10_5 + REGISTERS[rs2] + REGISTERS[rs1] + FUNCT3[mnemonic] + imm4_1 + imm11 + OPCODES[mnemonic]
+    return imm12 + imm10_5 + REGISTERS[rs2] + REGISTERS[rs1] + FUNCT3[mnemonic] + imm4_1 + imm11 + OPCODES[mnemonic]["opcode"]
 
 def encode_u_type(tokens):
     # Expected tokens format: [mnemonic, rd, imm]
@@ -69,7 +67,7 @@ def encode_u_type(tokens):
     imm = to_int(imm_token)
     imm20 = twos_complement(imm, 20)
 
-    return imm20 + REGISTERS[rd] + OPCODES[mnemonic]
+    return imm20 + REGISTERS[rd] + OPCODES[mnemonic]["opcode"]
 
 def encode_j_type(tokens, current_pc, labels):
     # Expected tokens format: [mnemonic, rd, imm_or_label]
@@ -85,4 +83,4 @@ def encode_j_type(tokens, current_pc, labels):
     imm11 = imm_bits[9]
     imm19_12 = imm_bits[1:9]
 
-    return imm20 + imm10_1 + imm11 + imm19_12 + REGISTERS[rd] + OPCODES[mnemonic]
+    return imm20 + imm10_1 + imm11 + imm19_12 + REGISTERS[rd] + OPCODES[mnemonic]["opcode"]
