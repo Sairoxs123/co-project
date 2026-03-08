@@ -150,4 +150,7 @@ def first_pass_error_check(lines):
     if not halt_state:
         errors.append("Missing Virtual Halt instruction")
 
+    if pc > 256:
+        errors.append("Program exceeds memory limit of 64 (256 Bytes) instructions")
+
     return errors, clean_instructions, labels, pcs
