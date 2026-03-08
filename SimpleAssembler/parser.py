@@ -44,3 +44,9 @@ def tokenizer(line):
     tokens = line.split()
 
     return tokens
+    if  mneonic=="lw":
+        imm_token = tokens[2]
+        rs1 = tokens[3]
+    else:
+        rs1 = tokens[2]
+        imm_token = tokens[3]
