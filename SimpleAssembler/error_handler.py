@@ -13,15 +13,18 @@ def first_pass_error_check(lines):
     expected_operands = {"R": 3, "I": 3, "S": 2, "B": 3, "U": 2, "J": 2}
 
     pc = 0 # Pass 1
-    for line in lines:
-        line = line.strip()
+    for i in range(len(lines)):
+        line = lines[i].strip()
         if not line:
             continue
         if ":" in line:
             label_part, remainder = line.split(":", 1)
             label = label_part.strip()
             if label:
-                labels[label] = pc
+                if not label[0].isalpha() and label[0] != "_":
+                    errors.append(f"Line {i+1}: Label must start with a character or _")
+                else:
+                    labels[label] = pc
             if remainder.strip():
                 pc += 4
         else:
@@ -41,7 +44,8 @@ def first_pass_error_check(lines):
             label = label_part.strip()
 
             if label:
-                labels[label] = pc
+                if not label[0].isalpha() and label[0] != "_":
+                    errors.append(f"Line {i+1}: Label must start with a character or _")
 
             line = remain.strip()
 
