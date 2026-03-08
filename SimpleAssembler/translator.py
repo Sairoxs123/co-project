@@ -17,6 +17,17 @@ def resolve_branch_or_jump_imm(token, current_pc, labels):
         return labels[token] - current_pc
     return to_int(token)
 
+def encode_s_type(tokens):
+    # Expected tokens format: [mnemonic, rs2, imm, rs1]
+    mnemonic = tokens[0]
+    rs2 = tokens[1]
+    imm_token = tokens[2]
+    rs1 = tokens[3]
+
+    imm_token = twos_complement(to_int(imm_token), 12)
+
+    return imm_token[0:7] + REGISTERS[rs2] + REGISTERS[rs1] + FUNCT3[mnemonic] + imm_token[7:12] + OPCODES[mnemonic]
+
 def encode_b_type(tokens, current_pc, labels):
     # Expected tokens format: [mnemonic, rs1, rs2, imm_or_label]
     mnemonic = tokens[0]
