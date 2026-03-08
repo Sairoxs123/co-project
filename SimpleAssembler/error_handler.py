@@ -88,9 +88,9 @@ def first_pass_error_check(lines):
 
             operands = [reg, rs1, imm]
 
-        if len(operands) != expected_operands[instruction_type]: #OP count check
+        elif len(operands) != expected_operands[instruction_type]: #OP count check
             errors.append(f"Line {i+1}: Incorrect operand count")
-            continue 
+            continue
 
         try: #Register Validation
 
@@ -151,6 +151,6 @@ def first_pass_error_check(lines):
         errors.append("Missing Virtual Halt instruction")
 
     if pc > 256:
-        errors.append("Program exceeds memory limit of 64 (256 Bytes) instructions")
+        errors.append("Program exceeds memory limit of 256 Bytes (64 lines) instructions")
 
     return errors, clean_instructions, labels, pcs
