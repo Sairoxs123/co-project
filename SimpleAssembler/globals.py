@@ -33,31 +33,6 @@ REGISTERS = {
     "t5": "11110",
     "t6": "11111"
 }
-INST_TYPES = {
-    "add": "R",
-    "sub": "R",
-    "sll": "R",
-    "slt": "R",
-    "sltu": "R",
-    "xor": "R",
-    "srl": "R",
-    "or": "R",
-    "and": "R",
-    "lw": "I",
-    "addi": "I",
-    "sltiu": "I",
-    "jalr": "I",
-    "sw": "S",
-    "beq": "B",
-    "bne": "B",
-    "blt": "B",
-    "bge": "B",
-    "bltu": "B",
-    "bgeu": "B",
-    "lui": "U",
-    "auipc": "U",
-    "jal": "J"
-}
 OPCODES = {
     "add":"0110011",
     "sub": "0110011",
@@ -116,3 +91,4 @@ FUNCT7 = {
     "or": "0000000",
     "and": "0000000"
 }
+
