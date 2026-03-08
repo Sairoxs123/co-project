@@ -12,6 +12,22 @@ def first_pass_error_check(lines):
 
     expected_operands = {"R": 3, "I": 3, "S": 2, "B": 3, "U": 2, "J": 2}
 
+    pc = 0 # Pass 1
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        if ":" in line:
+            label_part, remainder = line.split(":", 1)
+            label = label_part.strip()
+            if label:
+                labels[label] = pc
+            if remainder.strip():
+                pc += 4
+        else:
+            pc += 4
+
+    pc = 0 # Pass 2
     for i in range(len(lines)):
 
         raw = lines[i]
@@ -70,7 +86,7 @@ def first_pass_error_check(lines):
 
         if len(operands) != expected_operands[instruction_type]: #OP count check
             errors.append(f"Line {i+1}: Incorrect operand count")
-            continue
+            continue 
 
         try: #Register Validation
 
