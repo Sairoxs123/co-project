@@ -25,8 +25,12 @@ def encode_r_type(tokens):
 def encode_i_type(tokens):
     mnemonic = tokens[0]
     rd = tokens[1]
-    imm_token = tokens[3]
-    rs1 = tokens[2]
+    if  mnemonic=="lw":
+        imm_token = tokens[2]
+        rs1 = tokens[3]
+    else:
+        rs1 = tokens[2]
+        imm_token = tokens[3]
     imm_token = twos_complement(to_int(imm_token), 12)
     return imm_token + REGISTERS[rs1] + FUNCT3[mnemonic] + REGISTERS[rd] + OPCODES[mnemonic]
 def encode_s_type(tokens):
