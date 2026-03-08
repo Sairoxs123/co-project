@@ -1,17 +1,16 @@
 from globals import OPCODES, REGISTERS
 
-PC_START = 0
-PC_STRIDE = 4
-
-def first_pass_check_errors(lines):
+def first_pass_error_check(lines):
 
     errors = []
     halt_state = False
 
-    pc = PC_START
+    pc = 0
     labels = {}
     clean_instructions = []
     pcs = []
+
+    expected_operands = {"R": 3, "I": 3, "S": 2, "B": 3, "U": 2, "J": 2}
 
     for i in range(len(lines)):
 
@@ -21,26 +20,26 @@ def first_pass_check_errors(lines):
         if not line:
             continue
 
-        if ":" in line: #label handler
-            label_part, remainder = line.split(":", 1)
+        if ":" in line: #Label Handler
+            label_part, remain = line.split(":", 1)
             label = label_part.strip()
 
             if label:
                 labels[label] = pc
 
-            line = remainder.strip()
+            line = remain.strip()
 
             if not line:
                 continue
 
         instruction = line
 
-        if halt_state: #instruction check after halt
+        if halt_state:
             errors.append(f"Line {i+1}: Instructions after virtual halt")
 
         clean_instructions.append(instruction)
         pcs.append(pc)
-        pc += PC_STRIDE
+        pc += 4
 
         parts = instruction.replace(",", " ").split()
         op = parts[0]
@@ -49,20 +48,84 @@ def first_pass_check_errors(lines):
             errors.append(f"Line {i+1}: Unknown instruction")
             continue
 
-        for register in parts[1:]: #register check
-            if register.startswith("x"):
-                if register not in REGISTERS:
-                    errors.append(f"Line {i+1}: Invalid register {register}")
+        instruction_type = OPCODES[op]["type"]
 
-        for value in parts[1:]: #immediate/value check
+        operands = parts[1:]
+
+        if op in ["lw", "sw"]: #OP Edge case
+            if len(operands) != 2:
+                errors.append(f"Line {i+1}: Incorrect operand count")
+                continue
+
+            reg = operands[0]
+            offset_part = operands[1]
+
+            if "(" not in offset_part or ")" not in offset_part:
+                errors.append(f"Line {i+1}: Invalid memory format")
+                continue
+
+            imm, rs1 = offset_part.replace(")", "").split("(")
+
+            operands = [reg, rs1, imm]
+
+        if len(operands) != expected_operands[instruction_type]: #OP count check
+            errors.append(f"Line {i+1}: Incorrect operand count")
+            continue
+
+        try: #Register Validation
+
+            if instruction_type == "R":
+                rd, rs1, rs2 = operands
+                for reg in [rd, rs1, rs2]:
+                    if reg not in REGISTERS:
+                        errors.append(f"Line {i+1}: Invalid register {reg}")
+
+            elif instruction_type == "I":
+                rd, rs1, imm = operands
+                for reg in [rd, rs1]:
+                    if reg not in REGISTERS:
+                        errors.append(f"Line {i+1}: Invalid register {reg}")
+
+            elif instruction_type == "S":
+                rs2, rs1, imm = operands
+                for reg in [rs2, rs1]:
+                    if reg not in REGISTERS:
+                        errors.append(f"Line {i+1}: Invalid register {reg}")
+
+            elif instruction_type == "B":
+                rs1, rs2, imm = operands
+                for reg in [rs1, rs2]:
+                    if reg not in REGISTERS:
+                        errors.append(f"Line {i+1}: Invalid register {reg}")
+
+            elif instruction_type in ["U", "J"]:
+                rd, imm = operands
+                if rd not in REGISTERS:
+                    errors.append(f"Line {i+1}: Invalid register {rd}")
+
+        except ValueError:
+            errors.append(f"Line {i+1}: Incorrect operand count")
+            continue
+
+        for value in operands: #Immediate/Value Checker
+
             if value.lstrip("-").isdigit():
+
                 val = int(value)
 
-                if val < -2048 or val > 2047:
-                    errors.append(f"Line {i+1}: Value out of range")
+                if instruction_type in ["I", "S", "B"]:
+                    if val < -2048 or val > 2047:
+                        errors.append(f"Line {i+1}: Value out of range")
 
-        if (op == "beq" and len(parts) == 4 and parts[1] == "x0" and parts[2] == "x0" and parts[3] == "0"): #halt checker
-            halt_state = True
+                elif instruction_type in ["U", "J"]:
+                    if val < -(2**20) or val > (2**20 - 1):
+                        errors.append(f"Line {i+1}: Value out of range")
+
+        if op == "beq" and len(parts) == 4: #Halt checker
+            rs1, rs2, imm = parts[1], parts[2], parts[3]
+
+            if rs1 in ["x0", "zero"] and rs2 in ["x0", "zero"] and imm in ["0", "0x00000000"]:
+                halt_state = True
 
     if not halt_state:
         errors.append("Missing Virtual Halt instruction")
