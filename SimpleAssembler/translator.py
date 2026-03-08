@@ -1,4 +1,4 @@
-from globals import OPCODES, FUNCT3, REGISTERS
+from globals import OPCODES, FUNCT3, REGISTERS, FUNCT7
 
 # PUSHKAR U CODE HERE
 
