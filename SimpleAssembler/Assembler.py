@@ -33,6 +33,8 @@ with open(out_file, 'w') as f:
         f.write(instr + "\n")
 
 with open(out_readable, 'w') as f:
-    for i in range(len(clean_instructions)):
-        f.write(f"{pcs[i]}\t{clean_instructions[i]}\t{output[i]}\n")
+    f.write(f"{'PC':<10}{'Instruction':<30}{'Machine Code'}\n")
+    f.write("-" * 75 + "\n")
 
+    for i in range(len(clean_instructions)):
+        f.write(f"0x{pcs[i]:04x}{clean_instructions[i]}{output[i]}\n")
