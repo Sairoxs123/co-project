@@ -37,7 +37,7 @@ def encode_i_type(tokens):
     return imm_token + REGISTERS[rs1] + FUNCT3[mnemonic] + REGISTERS[rd] + OPCODES[mnemonic]["opcode"]
 
 def encode_s_type(tokens):
-    # Expected tokens format: [mnemonic, rs2, imm, rs1]
+    # expected tokens format = [mnemonic, rs2, imm, rs1]
     mnemonic = tokens[0]
     rs2 = tokens[1]
     imm_token = tokens[2]
@@ -48,7 +48,7 @@ def encode_s_type(tokens):
     return imm_token[0:7] + REGISTERS[rs2] + REGISTERS[rs1] + FUNCT3[mnemonic] + imm_token[7:12] + OPCODES[mnemonic]["opcode"]
 
 def encode_b_type(tokens, current_pc, labels):
-    # Expected tokens format: [mnemonic, rs1, rs2, imm_or_label]
+    # expected tokens format = [mnemonic, rs1, rs2, imm_or_label]
     mnemonic = tokens[0]
     rs1 = tokens[1]
     rs2 = tokens[2]
@@ -56,7 +56,7 @@ def encode_b_type(tokens, current_pc, labels):
     imm = resolve_branch_or_jump_imm(imm_token, current_pc, labels)
     imm_bits = twos_complement(imm, 13)
 
-    # B-immediate bit placement: imm[12|10:5|4:1|11]
+    # B-immediate bits order = imm[12|10:5|4:1|11]
     imm12 = imm_bits[0]
     imm10_5 = imm_bits[2:8]
     imm4_1 = imm_bits[8:12]
@@ -65,7 +65,7 @@ def encode_b_type(tokens, current_pc, labels):
     return imm12 + imm10_5 + REGISTERS[rs2] + REGISTERS[rs1] + FUNCT3[mnemonic] + imm4_1 + imm11 + OPCODES[mnemonic]["opcode"]
 
 def encode_u_type(tokens):
-    # Expected tokens format: [mnemonic, rd, imm]
+    # expected tokens format = [mnemonic, rd, imm]
     mnemonic = tokens[0]
     rd = tokens[1]
     imm_token = tokens[2]
@@ -75,14 +75,14 @@ def encode_u_type(tokens):
     return imm20 + REGISTERS[rd] + OPCODES[mnemonic]["opcode"]
 
 def encode_j_type(tokens, current_pc, labels):
-    # Expected tokens format: [mnemonic, rd, imm_or_label]
+    # expected tokens format = [mnemonic, rd, imm_or_label]
     mnemonic = tokens[0]
     rd = tokens[1]
     imm_token = tokens[2]
     imm = resolve_branch_or_jump_imm(imm_token, current_pc, labels)
     imm_bits = twos_complement(imm, 21)
 
-    # J-immediate bit placement: imm[20|10:1|11|19:12]
+    # J-immediate bits order = imm[20|10:1|11|19:12]
     imm20 = imm_bits[0]
     imm10_1 = imm_bits[10:20]
     imm11 = imm_bits[9]

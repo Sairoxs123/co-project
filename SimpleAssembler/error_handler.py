@@ -5,6 +5,9 @@ def first_pass_error_check(lines):
     errors = []
     halt_state = False
 
+    halt_exists = False
+    halt_in_last_line = False
+
     pc = 0
     labels = {}
     clean_instructions = []
@@ -53,9 +56,6 @@ def first_pass_error_check(lines):
                 continue
 
         instruction = line
-
-        if halt_state:
-            errors.append(f"Line {i+1}: Instructions after virtual halt")
 
         clean_instructions.append(instruction)
         pcs.append(pc)
@@ -145,10 +145,20 @@ def first_pass_error_check(lines):
             rs1, rs2, imm = parts[1], parts[2], parts[3]
 
             if rs1 in ["x0", "zero"] and rs2 in ["x0", "zero"] and imm in ["0", "0x00000000"]:
-                halt_state = True
+                halt_exists = True
 
-    if not halt_state:
-        errors.append("Missing Virtual Halt instruction")
+    last_instruction = clean_instructions[-1] if clean_instructions else ""
+    if halt_exists and last_instruction.startswith("beq"):
+        parts = instruction.replace(",", " ").split()
+        if len(parts) == 4:
+            rs1, rs2, imm = parts[1], parts[2], parts[3]
+            if rs1 in ["x0", "zero"] and rs2 in ["x0", "zero"] and imm in ["0", "0x00000000"]:
+                halt_in_last_line = True
+
+    if not halt_exists:
+        errors.append("Program does not contain a halt instruction (beq x0, x0, 0)")
+    elif not halt_in_last_line:
+        errors.append("Halt instruction must be the last instruction in the program")
 
     if pc > 256:
         errors.append("Program exceeds memory limit of 256 Bytes (64 lines) instructions")
