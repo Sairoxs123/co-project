@@ -2,13 +2,13 @@ import sys
 from parser import parser
 import error_handler as e
 
-if len(sys.argv) != 4:
+if len(sys.argv) < 3 or len(sys.argv) > 4:
     print("Usage: python3 Assembler.py <input_assembly_path> <output_machine_code_path> [output_readable_path]")
     sys.exit(1)
 
 inp_file = sys.argv[1]
 out_file = sys.argv[2]
-out_readable = sys.argv[3]
+out_readable = sys.argv[3] if len(sys.argv) == 4 else None
 
 with open(inp_file, 'r') as f:
     lines = f.readlines()
@@ -32,9 +32,10 @@ with open(out_file, 'w') as f:
     for instr in output:
         f.write(instr + "\n")
 
-with open(out_readable, 'w') as f:
-    f.write(f"{'PC':<12}{'Instruction':<20}{'Machine Code'}\n")
-    f.write("-" * 75 + "\n")
+if out_readable:
+    with open(out_readable, 'w') as f:
+        f.write(f"{'PC':<12}{'Instruction':<20}{'Machine Code'}\n")
+        f.write("-" * 75 + "\n")
 
-    for i in range(len(clean_instructions)):
-        f.write(f"0x{pcs[i]:04x}\t\t{clean_instructions[i]:<20}{output[i]}\n")
+        for i in range(len(clean_instructions)):
+            f.write(f"0x{pcs[i]:04x}\t\t{clean_instructions[i]:<20}{output[i]}\n")

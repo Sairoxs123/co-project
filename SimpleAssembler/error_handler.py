@@ -149,7 +149,7 @@ def first_pass_error_check(lines):
 
     last_instruction = clean_instructions[-1] if clean_instructions else ""
     if halt_exists and last_instruction.startswith("beq"):
-        parts = instruction.replace(",", " ").split()
+        parts = last_instruction.replace(",", " ").split()
         if len(parts) == 4:
             rs1, rs2, imm = parts[1], parts[2], parts[3]
             if rs1 in ["x0", "zero"] and rs2 in ["x0", "zero"] and imm in ["0", "0x00000000"]:
@@ -162,5 +162,13 @@ def first_pass_error_check(lines):
 
     if pc > 256:
         errors.append("Program exceeds memory limit of 256 Bytes (64 lines) instructions")
+
+    for inst in clean_instructions:
+        parts = inst.replace(",", " ").split()
+        op = parts[0]
+        if op in ["beq", "bne", "blt", "bge", "bltu", "bgeu", "jal"]:
+            target = parts[-1]
+            if not target.lstrip("-").isdigit() and target not in labels:
+                errors.append(f"Undefined label used: {target}")
 
     return errors, clean_instructions, labels, pcs
