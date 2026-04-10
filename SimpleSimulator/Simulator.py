@@ -13,7 +13,9 @@ out_readable = sys.argv[3] if len(sys.argv) == 4 else None
 
 PC = 0
 registers = [0] * 32
+registers[2] = 0x0000017C
 memory = [0] * 32
+stack_memory = {}
 history = []
 
 instrs = []
@@ -24,26 +26,26 @@ with open(inp_machine, "r") as f:
                 instrs.append(line)
 
 while PC//4 < len(instrs):
-        
-    instr = instrs[PC//4]
 
-    if instr == "00000000000000000000000001100011":
-        break
+    instr = instrs[PC//4]
 
     decoded = decoder.decode(instr)
 
-    new_PC = execution.execute(decoded, registers, memory, PC)
+    new_PC = execution.execute(decoded, registers, memory, PC, stack_memory)
 
     registers[0] = 0
 
-    history.append({
-        "pc": PC,
-        "registers": registers.copy()
-    })
-
     if new_PC is None:
-            PC += 4
+        PC += 4
     else:
         PC = new_PC
+
+    history.append({
+        "pc": PC,
+        "registers": [reg for reg in registers]
+    })
+
+    if instr == "00000000000000000000000001100011":
+        break
 
 th.trace(history, memory, out_trace, out_readable)
