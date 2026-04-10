@@ -1,5 +1,8 @@
 from globals import INSTR_OPERANDS, REGISTER_MAP
 
+def to_32bit(value):
+    return value & 0xFFFFFFFF
+
 def get_reg_idx(reg_name):
     if reg_name not in REGISTER_MAP:
         raise ValueError(f"Unknown register: {reg_name}")
@@ -8,11 +11,11 @@ def get_reg_idx(reg_name):
 def execute_r_type(instr, operands, registers):
     rd, rs1, rs2 = map(get_reg_idx, operands)
     if instr == "add":
-        registers[rd] = (registers[rs1] + registers[rs2]) & 0xFFFFFFFF
+        registers[rd] = to_32bit(registers[rs1] + registers[rs2])
     elif instr == "sub":
-        registers[rd] = (registers[rs1] - registers[rs2]) & 0xFFFFFFFF
+        registers[rd] = to_32bit(registers[rs1] - registers[rs2])
     elif instr == "sll":
-        registers[rd] = (registers[rs1] << (registers[rs2] & 0x1F)) & 0xFFFFFFFF
+        registers[rd] = to_32bit(registers[rs1] << (registers[rs2] & 0x1F))
     elif instr == "slt":
         val1 = registers[rs1] if registers[rs1] < 0x80000000 else registers[rs1] - 0x100000000
         val2 = registers[rs2] if registers[rs2] < 0x80000000 else registers[rs2] - 0x100000000
@@ -20,16 +23,16 @@ def execute_r_type(instr, operands, registers):
     elif instr == "sltu":
         registers[rd] = 1 if registers[rs1] < registers[rs2] else 0
     elif instr == "xor":
-        registers[rd] = (registers[rs1] ^ registers[rs2]) & 0xFFFFFFFF
+        registers[rd] = to_32bit(registers[rs1] ^ registers[rs2])
     elif instr == "srl":
-        registers[rd] = (registers[rs1] >> (registers[rs2] & 0x1F)) & 0xFFFFFFFF
+        registers[rd] = to_32bit(registers[rs1] >> (registers[rs2] & 0x1F))
     elif instr == "sra":
         val1 = registers[rs1] if registers[rs1] < 0x80000000 else registers[rs1] - 0x100000000
-        registers[rd] = (val1 >> (registers[rs2] & 0x1F)) & 0xFFFFFFFF
+        registers[rd] = to_32bit(val1 >> (registers[rs2] & 0x1F))
     elif instr == "or":
-        registers[rd] = (registers[rs1] | registers[rs2]) & 0xFFFFFFFF
+        registers[rd] = to_32bit(registers[rs1] | registers[rs2])
     elif instr == "and":
-        registers[rd] = (registers[rs1] & registers[rs2]) & 0xFFFFFFFF
+        registers[rd] = to_32bit(registers[rs1] & registers[rs2])
     registers[0] = 0
 
 def execute_i_type(instr, operands, registers, memory, PC, stack_memory):
@@ -39,7 +42,7 @@ def execute_i_type(instr, operands, registers, memory, PC, stack_memory):
         rs1_name = rest[:-1]
         imm = int(imm)
         rd, rs1 = get_reg_idx(rd_name), get_reg_idx(rs1_name)
-        address = (registers[rs1] + imm) & 0xFFFFFFFF
+        address = to_32bit(registers[rs1] + imm)
         mem_index = (address - 0x00010000) // 4
         if 0 <= mem_index < len(memory):
             registers[rd] = memory[mem_index]
@@ -50,19 +53,19 @@ def execute_i_type(instr, operands, registers, memory, PC, stack_memory):
         imm = int(imm)
         rd, rs1 = get_reg_idx(rd_name), get_reg_idx(rs1_name)
         target = (registers[rs1] + imm) & ~1
-        registers[rd] = (PC + 4) & 0xFFFFFFFF
+        registers[rd] = to_32bit(PC + 4)
         registers[0] = 0
-        return target & 0xFFFFFFFF
+        return to_32bit(target)
     else:
         rd_name, rs1_name, imm = operands
         imm = int(imm)
         rd, rs1 = get_reg_idx(rd_name), get_reg_idx(rs1_name)
         if instr == "addi":
-            registers[rd] = (registers[rs1] + imm) & 0xFFFFFFFF
+            registers[rd] = to_32bit(registers[rs1] + imm)
         elif instr == "sltiu":
-            registers[rd] = 1 if registers[rs1] < (imm & 0xFFFFFFFF) else 0
+            registers[rd] = 1 if registers[rs1] < to_32bit(imm) else 0
     registers[0] = 0
-    return (PC + 4) & 0xFFFFFFFF
+    return to_32bit(PC + 4)
 
 def execute_s_type(instr, operands, registers, memory, PC, stack_memory):
     rs2_name, mem_operand = operands
@@ -70,13 +73,13 @@ def execute_s_type(instr, operands, registers, memory, PC, stack_memory):
     rs1_name = rest[:-1]
     imm = int(imm)
     rs2, rs1 = get_reg_idx(rs2_name), get_reg_idx(rs1_name)
-    address = (registers[rs1] + imm) & 0xFFFFFFFF
+    address = to_32bit(registers[rs1] + imm)
     mem_index = (address - 0x00010000) // 4
     if 0 <= mem_index < len(memory):
         memory[mem_index] = registers[rs2]
     else:
         stack_memory[address] = registers[rs2]
-    return (PC + 4) & 0xFFFFFFFF
+    return to_32bit(PC + 4)
 
 def execute_b_type(instr, operands, registers, PC):
     rs1_name, rs2_name, imm = operands
@@ -99,27 +102,27 @@ def execute_b_type(instr, operands, registers, PC):
         condition = registers[rs1] >= registers[rs2]
 
     if condition:
-        return (PC + imm) & 0xFFFFFFFF
-    return (PC + 4) & 0xFFFFFFFF
+        return to_32bit(PC + imm)
+    return to_32bit(PC + 4)
 
 def execute_u_type(instr, operands, registers, PC):
     rd_name, imm = operands
     imm = int(imm)
     rd = get_reg_idx(rd_name)
     if instr == "lui":
-        registers[rd] = imm & 0xFFFFFFFF
+        registers[rd] = to_32bit(imm)
     elif instr == "auipc":
-        registers[rd] = (PC + imm) & 0xFFFFFFFF
+        registers[rd] = to_32bit(PC + imm)
     registers[0] = 0
-    return (PC + 4) & 0xFFFFFFFF
+    return to_32bit(PC + 4)
 
 def execute_j_type(instr, operands, registers, PC):
     rd_name, imm = operands
     imm = int(imm)
     rd = get_reg_idx(rd_name)
-    registers[rd] = (PC + 4) & 0xFFFFFFFF
+    registers[rd] = to_32bit(PC + 4)
     registers[0] = 0
-    return (PC + imm) & 0xFFFFFFFF
+    return to_32bit(PC + imm)
 
 def execute(decoded_instr, registers, memory, PC, stack_memory=None):
     if stack_memory is None:
@@ -143,7 +146,7 @@ def execute(decoded_instr, registers, memory, PC, stack_memory=None):
 
     if instr in r_type:
         execute_r_type(instr, operands, registers)
-        return (PC + 4) & 0xFFFFFFFF
+        return to_32bit(PC + 4)
     elif instr in i_type:
         return execute_i_type(instr, operands, registers, memory, PC, stack_memory)
     elif instr in s_type:
