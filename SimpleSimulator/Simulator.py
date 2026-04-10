@@ -9,37 +9,41 @@ if len(sys.argv) < 3 or len(sys.argv) > 4:
 
 inp_machine = sys.argv[1]
 out_trace = sys.argv[2]
-out_readable = sys.argv[3]
+out_readable = sys.argv[3] if len(sys.argv) == 4 else None
 
 PC = 0
 registers = [0] * 32
 memory = [0] * 32
+history = []
 
+instrs = []
 with open(inp_machine, "r") as f:
         for line in f:
-                instrs = [line.strip()]
+            line = line.strip()
+            if line:
+                instrs.append(line)
 
-with open(out_trace, "w") as f:
+while PC//4 < len(instrs):
         
-        while PC // 4 < len(instrs):
-                
-                instr = instrs[PC//4]
+    instr = instrs[PC//4]
 
-                decoded = decoder.decode(instr)
+    if instr == "00000000000000000000000001100011":
+        break
 
-                new_PC = execution.execute(decoded, registers, memory, PC)
+    decoded = decoder.decode(instr)
 
-                registers[0] = 0
+    new_PC = execution.execute(decoded, registers, memory, PC)
 
-                trace_line = th.trace(PC, registers)
-                f.write(trace_line)
+    registers[0] = 0
 
-                if new_PC is None:
-                        PC += 4
-                else:
-                    PC = new_PC
-        
-        mem_lines = th.memory_dump(memory)
-        for line in mem_lines:
-               f.write(line)
-                
+    history.append({
+        "pc": PC,
+        "registers": registers.copy()
+    })
+
+    if new_PC is None:
+            PC += 4
+    else:
+        PC = new_PC
+
+th.trace(history, memory, out_trace, out_readable)
